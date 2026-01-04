@@ -1,26 +1,35 @@
 const BlogPost = require('../models/BlogPost');
 
-// GET /api/blogposts - List all blog posts (with pagination)
+// GET /api/blogposts - List all blog posts (with pagination, search, and sorting)
 exports.getAllBlogPosts = async (req, res) => {
   try {
     const limit = parseInt(req.query.limit) || 10;
     const offset = parseInt(req.query.offset) || 0;
     const search = req.query.search || '';
+    const sortField = req.query.sort || 'createdAt';
+    const sortOrder = req.query.order === 'asc' ? 1 : -1;
 
-    // Build query for search functionality
+    // Build query for search functionality (searches title, content, author, and category)
     const query = {};
     if (search) {
       query.$or = [
         { title: { $regex: search, $options: 'i' } },
         { content: { $regex: search, $options: 'i' } },
-        { author: { $regex: search, $options: 'i' } }
+        { author: { $regex: search, $options: 'i' } },
+        { category: { $regex: search, $options: 'i' } }
       ];
     }
+
+    // Validate sort field to prevent potential security issues
+    const allowedSortFields = ['title', 'content', 'author', 'category', 'createdAt', 'updatedAt'];
+    const sortBy = allowedSortFields.includes(sortField) ? sortField : 'createdAt';
+    const sortObj = {};
+    sortObj[sortBy] = sortOrder;
 
     const blogPosts = await BlogPost.find(query)
       .limit(limit)
       .skip(offset)
-      .sort({ createdAt: -1 });
+      .sort(sortObj);
 
     const total = await BlogPost.countDocuments(query);
 
@@ -57,25 +66,35 @@ exports.getBlogPostById = async (req, res) => {
 exports.createBlogPost = async (req, res) => {
   try {
     // Basic validation
-    if (!req.body.title || !req.body.content || !req.body.author) {
+    if (!req.body.title || !req.body.content || !req.body.author || !req.body.category) {
       return res.status(400).json({ 
-        error: 'Missing required fields: title, content, and author are required' 
+        error: 'Missing required fields: title, content, author, and category are required' 
       });
     }
 
     // Check data types
     if (typeof req.body.title !== 'string' || 
         typeof req.body.content !== 'string' || 
-        typeof req.body.author !== 'string') {
+        typeof req.body.author !== 'string' ||
+        typeof req.body.category !== 'string') {
       return res.status(400).json({ 
-        error: 'Invalid data types: title, content, and author must be strings' 
+        error: 'Invalid data types: title, content, author, and category must be strings' 
+      });
+    }
+
+    // Validate category
+    const allowedCategories = ['Tech', 'Lifestyle', 'News'];
+    if (!allowedCategories.includes(req.body.category)) {
+      return res.status(400).json({ 
+        error: `Invalid category. Allowed categories are: ${allowedCategories.join(', ')}` 
       });
     }
 
     const blogPost = new BlogPost({
       title: req.body.title.trim(),
       content: req.body.content,
-      author: req.body.author.trim()
+      author: req.body.author.trim(),
+      category: req.body.category.trim()
     });
 
     const savedPost = await blogPost.save();
@@ -104,11 +123,25 @@ exports.updateBlogPost = async (req, res) => {
     if (req.body.author !== undefined && typeof req.body.author !== 'string') {
       return res.status(400).json({ error: 'author must be a string' });
     }
+    if (req.body.category !== undefined && typeof req.body.category !== 'string') {
+      return res.status(400).json({ error: 'category must be a string' });
+    }
+
+    // Validate category if provided
+    if (req.body.category !== undefined) {
+      const allowedCategories = ['Tech', 'Lifestyle', 'News'];
+      if (!allowedCategories.includes(req.body.category)) {
+        return res.status(400).json({ 
+          error: `Invalid category. Allowed categories are: ${allowedCategories.join(', ')}` 
+        });
+      }
+    }
 
     // Update fields
     if (req.body.title !== undefined) blogPost.title = req.body.title.trim();
     if (req.body.content !== undefined) blogPost.content = req.body.content;
     if (req.body.author !== undefined) blogPost.author = req.body.author.trim();
+    if (req.body.category !== undefined) blogPost.category = req.body.category.trim();
 
     const updatedPost = await blogPost.save();
     res.json({ data: updatedPost });

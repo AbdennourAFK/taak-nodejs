@@ -32,7 +32,7 @@ Handles the MongoDB connection. You'll need to update the connection string for 
 
 ### models/
 These files define the database schemas using Mongoose:
-- **BlogPost.js**: Defines the structure of blog posts (title, content, author, timestamps)
+- **BlogPost.js**: Defines the structure of blog posts (title, content, author, category, timestamps)
 - **Comment.js**: Defines the structure of comments (blogPostId reference, author, content, timestamps)
 
 ### controllers/
@@ -74,10 +74,16 @@ These files define the API endpoints:
 ## API Features
 
 ### Blog Posts
-- **List** (GET /api/blogposts): Supports pagination (limit, offset) and search
+- **List** (GET /api/blogposts): Supports pagination (limit, offset), search, and sorting
+  - Search: Searches across title, content, author, and category fields
+  - Sorting: Use `?sort=<field>&order=asc|desc` to sort by any field (title, content, author, category, createdAt, updatedAt)
 - **Detail** (GET /api/blogposts/:id): Get a single blog post
 - **Create** (POST /api/blogposts): Create a new blog post with validation
+  - Required fields: title, content, author, category
+  - Category must be one of: Tech, Lifestyle, News
 - **Update** (PUT /api/blogposts/:id): Update an existing blog post
+  - All fields are optional
+  - Category must be one of: Tech, Lifestyle, News (if provided)
 - **Delete** (DELETE /api/blogposts/:id): Delete a blog post
 
 ### Comments
@@ -89,15 +95,16 @@ These files define the API endpoints:
 
 ## Requirements Met
 
-✅ Two entities (BlogPost and Comment) with full CRUD operations  
-✅ Basic validation (required fields, data types)  
-✅ Pagination support (limit and offset query parameters)  
-✅ Search functionality (on blog posts)  
-✅ Root route (/) returns HTML API documentation  
-✅ Correct HTTP verbs (GET, POST, PUT, DELETE)  
-✅ Node.js 20+ compatible  
-✅ Express framework  
-✅ MongoDB database connection  
+ Two entities (BlogPost and Comment) with full CRUD operations  
+ Basic validation (required fields, data types, category enum validation)  
+ Pagination support (limit and offset query parameters)  
+ Advanced search functionality (on blog posts across multiple fields)  
+ Sorting functionality (sort by any field with ascending/descending order)  
+ Root route (/) returns HTML API documentation  
+ Correct HTTP verbs (GET, POST, PUT, DELETE)  
+ Node.js 20+ compatible  
+ Express framework  
+ MongoDB database connection  
 
 ## Example API Calls
 
@@ -109,13 +116,24 @@ Content-Type: application/json
 {
   "title": "My First Post",
   "content": "This is the content of my blog post.",
-  "author": "John Doe"
+  "author": "John Doe",
+  "category": "Tech"
 }
 ```
 
-### List blog posts with pagination and search:
+### List blog posts with pagination, search, and sorting:
 ```bash
+# Basic search
 GET http://localhost:3000/api/blogposts?limit=5&offset=0&search=first
+
+# Sort by title ascending
+GET http://localhost:3000/api/blogposts?sort=title&order=asc
+
+# Combined: search and sort by creation date
+GET http://localhost:3000/api/blogposts?search=tech&sort=createdAt&order=desc&limit=10
+
+# Sort by category
+GET http://localhost:3000/api/blogposts?sort=category&order=asc
 ```
 
 ### Create a comment:

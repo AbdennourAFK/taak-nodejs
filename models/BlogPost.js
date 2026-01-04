@@ -15,6 +15,12 @@ const blogPostSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
+  category: {
+    type: String,
+    required: true,
+    enum: ['Tech', 'Lifestyle', 'News'],
+    trim: true
+  },
   createdAt: {
     type: Date,
     default: Date.now

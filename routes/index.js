@@ -20,8 +20,16 @@ router.get('/', (req, res) => {
         <li>
             <strong>GET /api/blogposts</strong> - List all blog posts
             <ul>
-                <li>Query parameters: limit (default: 10), offset (default: 0), search (optional)</li>
-                <li>Example: <code>GET /api/blogposts?limit=5&offset=0&search=example</code></li>
+                <li>Query parameters: limit (default: 10), offset (default: 0), search (optional), sort (optional), order (optional: asc or desc)</li>
+                <li>Search: Searches across title, content, author, and category fields</li>
+                <li>Sort: Sort by any field (title, content, author, category, createdAt, updatedAt)</li>
+                <li>Examples: 
+                    <ul>
+                        <li><code>GET /api/blogposts?limit=5&offset=0&search=example</code></li>
+                        <li><code>GET /api/blogposts?sort=title&order=asc</code></li>
+                        <li><code>GET /api/blogposts?search=tech&sort=createdAt&order=desc</code></li>
+                    </ul>
+                </li>
             </ul>
         </li>
         <li>
@@ -33,15 +41,17 @@ router.get('/', (req, res) => {
         <li>
             <strong>POST /api/blogposts</strong> - Create a new blog post
             <ul>
-                <li>Body (JSON): { "title": "string", "content": "string", "author": "string" }</li>
+                <li>Body (JSON): { "title": "string", "content": "string", "author": "string", "category": "string" }</li>
                 <li>All fields are required</li>
+                <li>Category must be one of: Tech, Lifestyle, News</li>
             </ul>
         </li>
         <li>
             <strong>PUT /api/blogposts/:id</strong> - Update a blog post
             <ul>
-                <li>Body (JSON): { "title": "string", "content": "string", "author": "string" }</li>
+                <li>Body (JSON): { "title": "string", "content": "string", "author": "string", "category": "string" }</li>
                 <li>All fields are optional</li>
+                <li>Category must be one of: Tech, Lifestyle, News (if provided)</li>
             </ul>
         </li>
         <li>
@@ -93,7 +103,9 @@ router.get('/', (req, res) => {
     <ul>
         <li>Full CRUD operations for both entities</li>
         <li>Pagination support (limit and offset)</li>
-        <li>Search functionality on blog posts</li>
+        <li>Advanced search functionality on blog posts (title, content, author, category)</li>
+        <li>Sorting support (sort by any field with ascending/descending order)</li>
+        <li>Category validation for blog posts (Tech, Lifestyle, News)</li>
         <li>Basic validation for required fields and data types</li>
     </ul>
 </body>
